@@ -1,0 +1,26 @@
+{
+  "name": "node-islands",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --compilers js:babel-register",
+    "test:watch": "npm run test -- watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/calebgregory/node-islands.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/calebgregory/node-islands/issues"
+  },
+  "homepage": "https://github.com/calebgregory/node-islands#readme",
+  "devDependencies": {
+    "babel-preset-es2015": "^6.13.2",
+    "chai": "^3.5.0",
+    "mocha": "^3.0.2"
+  }
+}
