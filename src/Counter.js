@@ -67,13 +67,11 @@ const findIsland = ([x,y]) => _.findIndex( _.contains([x,y]) )
  *
  */
 const findIslands = (knx = []) => (islands = []) => {
-  console.log(islands)
   if (_.isEmpty(knx)) return islands
 
   const [[[a,b], [p,q]], ...knxs] = knx,
         isle = findIsland([p,q])(islands) // index of isle containing [p,q]
 
-  console.log([a,b],[p,q],'index of isle:',isle)
   if (isle < 0)
     return findIslands(knxs)([...islands, [[p,q]]])
 
