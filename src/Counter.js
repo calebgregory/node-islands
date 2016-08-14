@@ -22,10 +22,11 @@ const R = (map) => (i, j) => map[i][j+1] || 0
  */
 const toConnections = (map, i) => (knx, e, j) => {
   if (e) {
-    if (U(map)(i,j)) knx = _.assocPath([i, j, i-1], j  )(knx)
-    if (D(map)(i,j)) knx = _.assocPath([i, j, i+1], j  )(knx)
-    if (L(map)(i,j)) knx = _.assocPath([i, j, i  ], j-1)(knx)
-    if (R(map)(i,j)) knx = _.assocPath([i, j, i  ], j+1)(knx)
+    knx = _.append([[i, j], [i, j]])(knx) // every island is connected to itself
+    if (U(map)(i,j)) knx = _.append([[i, j], [i-1, j  ]])(knx)
+    if (D(map)(i,j)) knx = _.append([[i, j], [i+1, j  ]])(knx)
+    if (L(map)(i,j)) knx = _.append([[i, j], [i  , j-1]])(knx)
+    if (R(map)(i,j)) knx = _.append([[i, j], [i  , j+1]])(knx)
   }
   return knx
 }
@@ -33,12 +34,12 @@ const toConnections = (map, i) => (knx, e, j) => {
 /**
  * connect :: ([[n]]) => ([n], i) => {i:{j:{p:q}}} p,q <- connected point
  */
-const connect = (map) => (row, i) => row.reduce(toConnections(map, i), {})
+const connect = (map) => (row, i) => row.reduce(toConnections(map, i), [])
 
 /**
  * connectMap :: ([[n]]) => {i:{j:{p:q}}} p,q <- connected point
  */
-const connectMap = (map) => map.reduce((acc, r, i) => _.merge(acc)(connect(map)(r, i)), {})
+const connectMap = (map) => map.reduce((acc, r, i) => _.concat(acc)(connect(map)(r, i)), [])
 
 /**
  * toConnectCoords :: ({i:{j:{p:q}}}) => [[i, j], [p, q]]
@@ -65,40 +66,40 @@ const toConnectCoords = (connections) => _.pipe(
   }, [])
 )(connections)
 
-/**
- * the game plan here is to
- *
- * traverse the connections tree,
- *   node a
- *        |
- *        b - c
- *            |\
- *            d e
- * adding member coordinates to island Set
- */
+const findIsland = ([[x,y],[w,z]]) => _.findIndex(
+  _.any(_.either(_.equals([x,y]), _.equals([w,z])))
+)
+
+const findIslands = (coords = []) => (islands = []) => {
+  console.log(islands)
+  console.log()
+  if (_.isEmpty(coords))
+    return islands
+
+  const [[[i,j], [p,q]], ...rest] = coords,
+        isle = findIsland([[i,j], [p,q]])(islands)
+
+  // console.log(`${isle} :: (i,j)=(${i},${j}) (p,q)=(${p},${q})`)
+
+  if (isle < 0)
+    return findIslands(rest)([...islands, [[i,j]]])
+
+  if (_.not(_.contains([i,j])(islands[isle])))
+    islands[isle] = islands[isle].concat([[i,j]])
+  if (_.not(_.contains([p,q])(islands[isle])))
+    islands[isle] = islands[isle].concat([[p,q]])
+
+  return findIslands(rest)(islands)
+}
+
 const countIslands = (connections) => {
   const connectedCoords = toConnectCoords(connections)
 
-  let islands = []
+  console.log(connectedCoords)
 
-  connectedCoords.forEach(([[i, j], [p, q]]) => {
-    console.log(`(${i}, ${j}) : (${p}, ${q})`)
-    const pqKnx = _.toPairs(connections[p][q])
+  const islands = findIslands(connectedCoords)([])
 
-    pqKnx.forEach(([s, t]) => {
-      if (s == i && t == j)
-        return;
-      console.log(`(i, j) : (p, q) -> (s, t) = (${s}, ${t})`)
-      islands.forEach((island, n) => {
-        island.forEach(([X, Y]) => {
-          console.log('X', X, 'Y', Y)
-          if (_.equals(X, [p, q]) || _.equals(Y, [p, q]))
-            console.log(';)')
-        })
-      })
-    })
-
-  })
+  return islands.length
 }
 
 const numberOfIslands = (map) => {
@@ -108,16 +109,15 @@ const numberOfIslands = (map) => {
   console.log()
 
   const connections = connectMap(map)
-  console.log(JSON.stringify(connections, null, 2))
 
   const numConnex = countIslands(connections)
 
-  return;
+  return numConnex;
 }
 
 module.exports = {
   toConnections,
-  connect,
+  connectMap,
   numberOfIslands,
   countIslands
 }
