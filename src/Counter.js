@@ -41,73 +41,50 @@ const connect = (map) => (row, i) => row.reduce(toConnections(map, i), [])
  */
 const connectMap = (map) => map.reduce((acc, r, i) => _.concat(acc)(connect(map)(r, i)), [])
 
-/**
- * toConnectCoords :: ({i:{j:{p:q}}}) => [[i, j], [p, q]]
- *
- *  e.g., ({ 0 : 1 : { 1 : 1 } }) => [[0,1], [1,1]]
- */
-const toConnectCoords = (connections) => _.pipe(
-  _.keys,
-  _.reduce((acc, i) => {
-    const coords = _.pipe(
-      _.keys,
-      _.map(j => [i, j])
-    )(connections[i])
-
-    return [...acc, ...coords]
-  }, []),
-  _.reduce((acc, [i, j]) => {
-    const knxs = _.pipe(
-      _.toPairs, // ({p:q}) => [p,q]
-      _.map(([p, q]) => [[i, j], [p, q]])
-    )(connections[i][j])
-
-    return [...acc, ...knxs ]
-  }, [])
-)(connections)
-
-const findIsland = ([[x,y],[w,z]]) => _.findIndex(
-  _.any(_.either(_.equals([x,y]), _.equals([w,z])))
-)
+const findIsland = ([w,z]) => _.findIndex( _.contains([w,z]) )
 
 const findIslands = (coords = []) => (islands = []) => {
-  console.log(islands)
-  console.log()
-  if (_.isEmpty(coords))
-    return islands
+  if (_.isEmpty(coords)) return islands
 
-  const [[[i,j], [p,q]], ...rest] = coords,
-        isle = findIsland([[i,j], [p,q]])(islands)
-
-  // console.log(`${isle} :: (i,j)=(${i},${j}) (p,q)=(${p},${q})`)
+  const [[[x,y], [p,q]], ...rst] = coords,
+        isle = findIsland([p,q])(islands)
 
   if (isle < 0)
-    return findIslands(rest)([...islands, [[i,j]]])
+    return findIslands(rst)([...islands, [[p,q]]])
 
-  if (_.not(_.contains([i,j])(islands[isle])))
-    islands[isle] = islands[isle].concat([[i,j]])
-  if (_.not(_.contains([p,q])(islands[isle])))
-    islands[isle] = islands[isle].concat([[p,q]])
+  else {
+    const newIsle  = [...islands[isle], [x,y]],
+          kntdIsle = findIsland([x,y])(islands) // <- [x,y] = [1,2]
 
-  return findIslands(rest)(islands)
+    if (kntdIsle < 0)
+      return findIslands(rst)([
+        ...islands.slice(0, isle),
+        newIsle,
+        ...islands.slice(isle+1)
+      ])
+
+    else {
+      const [ min, max ] = _.sort((a,b) => a - b)([isle, kntdIsle])
+
+      const restOfKntdIsle = _.filter(([a,b]) => !_.equals([a,b])([x,y]))(islands[kntdIsle])
+
+      return findIslands(rst)([
+        ...islands.slice(0, min),
+        [ ...newIsle, ...restOfKntdIsle ],
+        ...islands.slice(min+1, max),
+        ...islands.slice(max+1)
+      ])
+    }
+  }
 }
 
 const countIslands = (connections) => {
-  const connectedCoords = toConnectCoords(connections)
-
-  console.log(connectedCoords)
-
-  const islands = findIslands(connectedCoords)([])
+  const islands = findIslands(connections)([])
 
   return islands.length
 }
 
 const numberOfIslands = (map) => {
-
-  console.log()
-  map.forEach( row => console.log(row) )
-  console.log()
-
   const connections = connectMap(map)
 
   const numConnex = countIslands(connections)
