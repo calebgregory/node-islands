@@ -31,39 +31,71 @@ const toConnections = (map, i) => (knx, e, j) => {
 }
 
 /**
- * connect :: ([[n]]) => ([n], i) => {i:{j:{x:y}}} x,y <- connected point
+ * connect :: ([[n]]) => ([n], i) => {i:{j:{p:q}}} p,q <- connected point
  */
 const connect = (map) => (row, i) => row.reduce(toConnections(map, i), {})
 
 /**
- * connectMap :: ([[n]]) => {i:{j:{x:y}}} x,y <- connected point
+ * connectMap :: ([[n]]) => {i:{j:{p:q}}} p,q <- connected point
  */
 const connectMap = (map) => map.reduce((acc, r, i) => _.merge(acc)(connect(map)(r, i)), {})
 
+/**
+ * toConnectCoords :: ({i:{j:{p:q}}}) => [[i, j], [p, q]]
+ *
+ *  e.g., ({ 0 : 1 : { 1 : 1 } }) => [[0,1], [1,1]]
+ */
 const toConnectCoords = (connections) => _.pipe(
   _.keys,
   _.reduce((acc, i) => {
-    const js     = _.keys(connections[i]),
-          coords = _.map(j => [i, j])(js)
+    const coords = _.pipe(
+      _.keys,
+      _.map(j => [i, j])
+    )(connections[i])
+
     return [...acc, ...coords]
   }, []),
   _.reduce((acc, [i, j]) => {
-    const knxs  = _.toPairs(connections[i][j]),
-          _knxs = _.map(k => [[i, j],k])(knxs)
-    return [...acc, ..._knxs ]
-  }, [])
-)(connections) // ({ 0 : 1 : { 1 : 1 } }) => [[0,1], [1,1]]
+    const knxs = _.pipe(
+      _.toPairs, // ({p:q}) => [p,q]
+      _.map(([p, q]) => [[i, j], [p, q]])
+    )(connections[i][j])
 
+    return [...acc, ...knxs ]
+  }, [])
+)(connections)
+
+/**
+ * the game plan here is to
+ *
+ * traverse the connections tree,
+ *   node a
+ *        |
+ *        b - c
+ *            |\
+ *            d e
+ * adding member coordinates to island Set
+ */
 const countIslands = (connections) => {
   const connectedCoords = toConnectCoords(connections)
 
   let islands = []
+
   connectedCoords.forEach(([[i, j], [p, q]]) => {
     console.log(`(${i}, ${j}) : (${p}, ${q})`)
     const pqKnx = _.toPairs(connections[p][q])
 
-    pqKnx.forEach(([s, t], n) => {
-      console.log(`${n} > (${s}, ${t})`)
+    pqKnx.forEach(([s, t]) => {
+      if (s == i && t == j)
+        return;
+      console.log(`(i, j) : (p, q) -> (s, t) = (${s}, ${t})`)
+      islands.forEach((island, n) => {
+        island.forEach(([X, Y]) => {
+          console.log('X', X, 'Y', Y)
+          if (_.equals(X, [p, q]) || _.equals(Y, [p, q]))
+            console.log(';)')
+        })
+      })
     })
 
   })
