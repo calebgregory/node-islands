@@ -40,23 +40,25 @@ const connect = (map) => (row, i) => row.reduce(toConnections(map, i), {})
  */
 const connectMap = (map) => map.reduce((acc, r, i) => _.merge(acc)(connect(map)(r, i)), {})
 
+const toConnectCoords = (connections) => _.pipe(
+  _.keys,
+  _.reduce((acc, i) => {
+    const js     = _.keys(connections[i]),
+          coords = _.map(j => [i, j])(js)
+    return [...acc, ...coords]
+  }, []),
+  _.reduce((acc, [i, j]) => {
+    const knxs  = _.toPairs(connections[i][j]),
+          _knxs = _.map(k => [[i, j],k])(knxs)
+    return [...acc, ..._knxs ]
+  }, [])
+)(connections) // ({ 0 : 1 : { 1 : 1 } }) => [[0,1], [1,1]]
+
 const countIslands = (connections) => {
-  const starterCoords = _.pipe(
-    _.keys,
-    _.reduce((acc, i) => {
-      const js     = _.keys(connections[i]),
-            coords = _.map(j => [i, j])(js)
-      return [...acc, ...coords]
-    }, []),
-    _.reduce((acc, [i, j]) => {
-      const knxs  = _.toPairs(connections[i][j]),
-            _knxs = _.map(k => [[i, j],k])(knxs)
-      return [...acc, ..._knxs ]
-    }, [])
-  )(connections) // ({ 0 : 1 : { 1 : 1 } }) => [[0,1], [1,1]]
+  const connectedCoords = toConnectCoords(connections)
 
   let islands = []
-  starterCoords.forEach(([[i, j], [p, q]]) => {
+  connectedCoords.forEach(([[i, j], [p, q]]) => {
     console.log(`(${i}, ${j}) : (${p}, ${q})`)
     const pqKnx = _.toPairs(connections[p][q])
 
