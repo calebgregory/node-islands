@@ -24,9 +24,9 @@ const toConnections = (map, i) => (knx, e, j) => {
   if (e) {
     knx = _.append([[i, j], [i, j]])(knx) // every island is connected to itself
     if (U(map)(i,j)) knx = _.append([[i, j], [i-1, j  ]])(knx)
-    if (D(map)(i,j)) knx = _.append([[i, j], [i+1, j  ]])(knx)
+//    if (D(map)(i,j)) knx = _.append([[i, j], [i+1, j  ]])(knx)
     if (L(map)(i,j)) knx = _.append([[i, j], [i  , j-1]])(knx)
-    if (R(map)(i,j)) knx = _.append([[i, j], [i  , j+1]])(knx)
+//    if (R(map)(i,j)) knx = _.append([[i, j], [i  , j+1]])(knx)
   }
   return knx
 }
