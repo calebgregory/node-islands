@@ -1,78 +1,104 @@
 const _ = require('ramda')
 
 /**
- * U, D, L, R :: ([[n]]) => (i, j) => e <- [0,1]
+ * U, L :: ([[n]]) => (i, j) => e <- [0,1]
  *
  * C | DIRECTION
  * --+----------
  * U | UP
- * D | DOWN
  * L | LEFT
- * R | RIGHT
  *
  * returns value of point C-ward to (i, j)
+ *
+ * e.g., given map
+ *
+ *  0 0 1
+ *  1 1 1
+ *  1 0 0,
+ *
+ * U(map)(1,2) => map[0][2] => 1
+ *
+ * defaults to 0
  */
-const U = (map) => (i, j) => (map[i-1]||{})[j] || 0
-const D = (map) => (i, j) => (map[i+1]||{})[j] || 0
+const U = (map) => (i, j) => (map[i-1]||[])[j] || 0
 const L = (map) => (i, j) => map[i][j-1] || 0
-const R = (map) => (i, j) => map[i][j+1] || 0
 
 /**
- * toConnections :: ([[n]], i) => ({}, e, j) => {i:{j:{x,y}} x,y <- connected point
+ * toConnections :: ([[n]], i) => ([], e, j) => [[i,j],[p,q]],
+ *                                        where [p,q] = coordinates of connected point
+ *
+ * takes `map` and index `i` of row in map, returns callback for reducer,
+ * which takes `knx` (accumulator) list of connections in given row, represented as tuples,
+ *              `e` value at map[i][j],
+ *              `j` index of column in map
+ *
+ * returns accumulator
  */
 const toConnections = (map, i) => (knx, e, j) => {
   if (e) {
     knx = _.append([[i, j], [i, j]])(knx) // every island is connected to itself
     if (U(map)(i,j)) knx = _.append([[i, j], [i-1, j  ]])(knx)
-//    if (D(map)(i,j)) knx = _.append([[i, j], [i+1, j  ]])(knx)
     if (L(map)(i,j)) knx = _.append([[i, j], [i  , j-1]])(knx)
-//    if (R(map)(i,j)) knx = _.append([[i, j], [i  , j+1]])(knx)
   }
   return knx
 }
 
 /**
- * connect :: ([[n]]) => ([n], i) => {i:{j:{p:q}}} p,q <- connected point
+ * connect :: ([[n]]) => ([n], i) => [[[x,y],[p,q]]], where [[x,y],[p,q]] = connected points
  */
 const connect = (map) => (row, i) => row.reduce(toConnections(map, i), [])
 
 /**
- * connectMap :: ([[n]]) => {i:{j:{p:q}}} p,q <- connected point
+ * connectMap :: ([[n]]) => [[[x,y],[p,q]]], where [[x,y],[p,q]] = connected points
+ *
+ * reduces connections in each row into one array using concatenation
  */
 const connectMap = (map) => map.reduce((acc, r, i) => _.concat(acc)(connect(map)(r, i)), [])
 
-const findIsland = ([w,z]) => _.findIndex( _.contains([w,z]) )
+/**
+ * findIsland :: ([x,y]) => ([[[x,y]]]) => N, N <- [-1, L], L = length of islands array
+ *
+ * returns the index of "island" that contains point [x,y]
+ */
+const findIsland = ([x,y]) => _.findIndex( _.contains([x,y]) )
 
-const findIslands = (coords = []) => (islands = []) => {
-  if (_.isEmpty(coords)) return islands
+/**
+ * findIslands :: ([[[x,y],[p,q]]]) => ([[[x,y]]]) => [[[x,y]]]
+ *
+ */
+const findIslands = (knx = []) => (islands = []) => {
+  console.log(islands)
+  if (_.isEmpty(knx)) return islands
 
-  const [[[x,y], [p,q]], ...rst] = coords,
-        isle = findIsland([p,q])(islands)
+  const [[[a,b], [p,q]], ...knxs] = knx,
+        isle = findIsland([p,q])(islands) // index of isle containing [p,q]
 
+  console.log([a,b],[p,q],'index of isle:',isle)
   if (isle < 0)
-    return findIslands(rst)([...islands, [[p,q]]])
+    return findIslands(knxs)([...islands, [[p,q]]])
 
   else {
-    const newIsle  = [...islands[isle], [x,y]],
-          kntdIsle = findIsland([x,y])(islands) // <- [x,y] = [1,2]
+    const isleWithAb = [...islands[isle], [a,b]],
+          kntdIsle   = findIsland([a,b])(islands) // <- [x,y] = [1,2]
 
     if (kntdIsle < 0)
-      return findIslands(rst)([
+      return findIslands(knxs)([
         ...islands.slice(0, isle),
-        newIsle,
+        isleWithAb,
         ...islands.slice(isle+1)
       ])
 
     else {
-      const [ min, max ] = _.sort((a,b) => a - b)([isle, kntdIsle])
+      const restOfKntdIsle    = _.filter(_.complement(_.equals)([a,b]))(islands[kntdIsle]),
+            isleWithAbAndKntd = [ ...isleWithAb, ...restOfKntdIsle ]
 
-      const restOfKntdIsle = _.filter(([a,b]) => !_.equals([a,b])([x,y]))(islands[kntdIsle])
+      const [ min, max ] = _.sort((x,y) => x - y)([ isle, kntdIsle ])
 
-      return findIslands(rst)([
-        ...islands.slice(0, min),
-        [ ...newIsle, ...restOfKntdIsle ],
-        ...islands.slice(min+1, max),
-        ...islands.slice(max+1)
+      return findIslands(knxs)([
+        ..._.slice(0, min)(islands),
+        isleWithAbAndKntd,
+        ..._.slice(min+1, max)(islands),
+        ..._.slice(max+1, Infinity)(islands)
       ])
     }
   }
@@ -93,8 +119,12 @@ const numberOfIslands = (map) => {
 }
 
 module.exports = {
+  U,
+  L,
   toConnections,
+  connect,
   connectMap,
+  findIsland,
   numberOfIslands,
   countIslands
 }
