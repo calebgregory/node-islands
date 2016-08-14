@@ -40,7 +40,7 @@ describe('Counter', () => {
   })
 
   describe('connectMap', () => {
-    it.only('takes a map and returns a two-dimensional array of connections', () => {
+    it('takes a map and returns a two-dimensional array of Up, Left, and Self connections', () => {
       const map = [
         [0, 1],
         [1, 1]
@@ -50,12 +50,10 @@ describe('Counter', () => {
 
       const expected = [
         [[0,1],[0,1]],
-        [[0,1],[1,1]],
         [[1,0],[1,0]],
-        [[1,0],[1,1]],
         [[1,1],[1,1]],
         [[1,1],[0,1]],
-        [[1,1],[1,0]],
+        [[1,1],[1,0]]
       ]
 
       expect(connections).to.eql(expected)
