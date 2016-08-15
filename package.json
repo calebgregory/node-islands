@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha --compilers js:babel-register",
     "test:watch": "npm run test -- watch",
-    "start": "node --harmony_spreadcalls --harmony_spread_arrays --harmony_concat_spreadable --harmony_default_parameters --harmony_destructuring src/main.js"
+    "start": "node --harmony_spreadcalls --harmony_spread_arrays --harmony_concat_spreadable --harmony_default_parameters --harmony_destructuring ./main.js"
   },
   "repository": {
     "type": "git",

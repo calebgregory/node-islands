@@ -4,9 +4,9 @@
 const co      = require('co'),
       prompt  = require('co-prompt')
 
-const Map     = require('./Map'),
-      Counter = require('./Counter'),
-      txt     = require('./txt')
+const Map     = require('./src/Map'),
+      Counter = require('./src/Counter'),
+      txt     = require('./src/txt')
 
 console.log(txt.intro)
 

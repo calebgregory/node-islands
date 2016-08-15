@@ -1,5 +1,18 @@
 # node-islands
 
+## see it in action
+
+if you don't have node, [install nvm](https://github.com/creationix/nvm#install-script).
+
+then,
+
+```bash
+$ nvm use 5.6.0
+$ npm run start
+```
+
+and watch the maps go...
+
 ## `map`
 
 a `map` is a 2-dimensional array of values in range `[0,1]`.
