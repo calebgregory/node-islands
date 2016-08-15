@@ -65,6 +65,9 @@ const findIsland = ([x,y]) => _.findIndex( _.contains([x,y]) )
 /**
  * findIslands :: ([[[x,y],[p,q]]]) => ([[[x,y]]]) => [[[x,y]]]
  *
+ * # see README
+ *
+ * returns array of islands
  */
 const findIslands = (knx = []) => (islands = []) => {
   if (_.isEmpty(knx)) return islands
