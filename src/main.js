@@ -8,14 +8,6 @@ const Map     = require('./Map'),
       Counter = require('./Counter'),
       txt     = require('./txt')
 
-const draw = (map, x, y) => {
-  map = Map.redraw(map)
-  console.log('\n'+txt.drawTextMap(map))
-
-  let cnt = Counter.numberOfIslands(map)
-  console.log(txt.caption(x,y,cnt))
-}
-
 console.log(txt.intro)
 
 co(function *() {
@@ -24,7 +16,16 @@ co(function *() {
 
   let map = Map.draw(parseInt(x), parseInt(y))
 
+  const draw = () => {
+    console.log('\n'+txt.drawTextMap(map))
+
+    let cnt = Counter.numberOfIslands(map)
+    console.log(txt.caption(x,y,cnt))
+
+    map = Map.redraw(map)
+  }
+
   draw(map, x, y)
 
-  setInterval(() => draw(map, x, y), 5000)
+  setInterval(draw, 5000)
 })
