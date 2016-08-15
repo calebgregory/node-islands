@@ -70,34 +70,34 @@ const findIsland = ([x,y]) => _.findIndex( _.contains([x,y]) )
  * returns array of islands
  */
 const findIslands = (knx = []) => (islands = []) => {
-  if (_.isEmpty(knx)) return islands
+  if (_.isEmpty(knx)) return islands // -> breaks out of recursion
 
-  const [[[a,b], [p,q]], ...knxs] = knx,
-        isle = findIsland([p,q])(islands) // index of isle containing [p,q]
+  const [[[a,b], [p,q]], ...knxs] = knx, // const [a, ...b] = [1,2,3] ; a => 1 ; b => [2,3]
+        idx = findIsland([p,q])(islands) // index of isle containing [p,q]
 
-  if (isle < 0)
-    return findIslands(knxs)([...islands, [[p,q]]])
+  if (idx < 0) // does isle not exist?
+    return findIslands(knxs)([...islands, [[p,q]]]) // create new island [[p,q]]
 
-  else {
-    const isleWithAb = [...islands[isle], [a,b]],
-          kntdIsle   = findIsland([a,b])(islands) // <- [x,y] = [1,2]
+  else {        // isle exists, so...
+    const isleWithAb = [...islands[idx], [a,b]], // add [a,b] to islands[idx].
+          kntdIdx    = findIsland([a,b])(islands) // index of another isle containing [a,b]
 
-    if (kntdIsle < 0)
-      return findIslands(knxs)([
-        ...islands.slice(0, isle),
+    if (kntdIdx < 0) // does there exist no other isle containing [a,b]?
+      return findIslands(knxs)([ // recur with updated islands
+        ...islands.slice(0, idx),
         isleWithAb,
-        ...islands.slice(isle+1)
+        ...islands.slice(idx+1)
       ])
 
-    else {
-      const restOfKntdIsle    = _.filter(_.complement(_.equals)([a,b]))(islands[kntdIsle]),
-            isleWithAbAndKntd = [ ...isleWithAb, ...restOfKntdIsle ]
+    else { // another isle containing [a,b] exists, so...
+      const restOfKntdIsle    = _.filter(_.complement(_.equals)([a,b]))(islands[kntdIdx]), // take other points on that island
+            isleWithAbAndKntd = [ ...isleWithAb, ...restOfKntdIsle ] // add these to current island
 
-      const [ min, max ] = _.sort((x,y) => x - y)([ isle, kntdIsle ])
+      const [ min, max ] = _.sort((x,y) => x - y)([ idx, kntdIdx ]) // preserve order of islands
 
-      return findIslands(knxs)([
+      return findIslands(knxs)([ // recur with updated islands
         ..._.slice(0, min)(islands),
-        isleWithAbAndKntd,
+        isleWithAbAndKntd, // <- includes islands[idx], [a,b], and rest of island previously containing [a,b]
         ..._.slice(min+1, max)(islands),
         ..._.slice(max+1, Infinity)(islands)
       ])
