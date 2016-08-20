@@ -36,9 +36,9 @@ const L = (map) => (i, j) => map[i][j-1] || 0
  */
 const toConnections = (map, i) => (knx, e, j) => {
   if (e) {
-    knx = _.append([[i, j], [i, j]])(knx) // every island is connected to itself
-    if (U(map)(i,j)) knx = _.append([[i, j], [i-1, j  ]])(knx)
-    if (L(map)(i,j)) knx = _.append([[i, j], [i  , j-1]])(knx)
+    knx = _.append([`${i},${j}`, `${i},${j}`])(knx) // every island is connected to itself
+    if (U(map)(i,j)) knx = _.append([`${i},${j}`, `${i-1},${j}`])(knx)
+    if (L(map)(i,j)) knx = _.append([`${i},${j}`, `${i},${j-1}`])(knx)
   }
   return knx
 }
@@ -60,7 +60,7 @@ const connectMap = (map) => map.reduce((acc, r, i) => _.concat(acc)(connect(map)
  *
  * returns the index of "island" that contains point [x,y]
  */
-const findIsland = ([x,y]) => _.findIndex( _.contains([x,y]) )
+const findIsland = (A) => _.findIndex( _.contains(A) )
 
 /**
  * findIslands :: ([[[x,y],[p,q]]]) => ([[[x,y]]]) => [[[x,y]]]
@@ -72,15 +72,15 @@ const findIsland = ([x,y]) => _.findIndex( _.contains([x,y]) )
 const findIslands = (knx = []) => (islands = []) => {
   if (_.isEmpty(knx)) return islands // -> breaks out of recursion
 
-  const [[[a,b], [p,q]], ...knxs] = knx, // const [a, ...b] = [1,2,3] ; a => 1 ; b => [2,3]
-        idx = findIsland([p,q])(islands) // index of isle containing [p,q]
+  const [[A, B], ...knxs] = knx, // const [a, ...b] = [1,2,3] ; a => 1 ; b => [2,3]
+        idx = findIsland(B)(islands) // index of isle containing [p,q]
 
   if (idx < 0) // does isle not exist?
-    return findIslands(knxs)([...islands, [[p,q]]]) // create new island [[p,q]]
+    return findIslands(knxs)([...islands, [B]]) // create new island [[p,q]]
 
   else {        // isle exists, so...
-    const isleWithAb = [...islands[idx], [a,b]], // add [a,b] to islands[idx].
-          kntdIdx    = findIsland([a,b])(islands) // index of another isle containing [a,b]
+    const isleWithAb = [...islands[idx], A], // add [a,b] to islands[idx].
+          kntdIdx    = findIsland(A)(islands) // index of another isle containing [a,b]
 
     if (kntdIdx < 0) // does there exist no other isle containing [a,b]?
       return findIslands(knxs)([ // recur with updated islands
@@ -90,7 +90,7 @@ const findIslands = (knx = []) => (islands = []) => {
       ])
 
     else { // another isle containing [a,b] exists, so...
-      const restOfKntdIsle    = _.filter(_.complement(_.equals)([a,b]))(islands[kntdIdx]), // take other points on that island
+      const restOfKntdIsle    = _.filter(_.complement(_.equals)(A))(islands[kntdIdx]), // take other points on that island
             isleWithAbAndKntd = [ ...isleWithAb, ...restOfKntdIsle ] // add these to current island
 
       const [ min, max ] = _.sort((x,y) => x - y)([ idx, kntdIdx ]) // preserve order of islands
